@@ -15,7 +15,7 @@ export const updatePassword = async (req, res) => {
     user.password = hashed;
     await user.save();
 
-    res.json({ msg: "Password updated" });
+    res.json({ data: { msg: "Password updated" } });
   } catch (err) {
     res.status(500).json({ msg: err.message });
   }
@@ -30,19 +30,33 @@ export const getAllUsers = async (req, res) => {
     const formatted = await Promise.all(
       users.map(async (user) => {
         let avgRating = null;
+
         if (user.role === "OWNER") {
-          const ratings = await Rating.findAll({
-            include: [{ model: Store, where: { userId: user.id } }],
-          });
-          avgRating =
-            ratings.reduce((acc, r) => acc + r.rating, 0) /
-            (ratings.length || 1);
+          const store = await Store.findOne({ where: { userId: user.id } });
+
+          if (store) {
+            const ratings = await Rating.findAll({
+              where: { storeId: store.id },
+            });
+
+            if (ratings.length > 0) {
+              avgRating =
+                ratings.reduce((acc, r) => acc + r.rating, 0) / ratings.length;
+            }
+          }
         }
-        return { ...user.toJSON(), avgRating };
+        return {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          address: user.address,
+          role: user.role,
+          avgRating,
+        };
       })
     );
 
-    res.json(formatted);
+    res.status(200).json({ data: { users: formatted } });
   } catch (err) {
     res.status(500).json({ msg: err.message });
   }
@@ -52,15 +66,25 @@ export const createUserByAdmin = async (req, res) => {
   try {
     const { name, email, password, address, role } = req.body;
     const hashed = await bcrypt.hash(password, 10);
-    const user = await User.create({
+    await User.create({
       name,
       email,
       address,
       password: hashed,
       role,
     });
-    res.status(201).json(user);
+    res.status(201).json({ data: { msg: "User created successfully" } });
   } catch (err) {
+    res.status(500).json({ msg: err.message });
+  }
+};
+
+export const stats = async (req, res) => {
+  try {
+    const userCount = await User.count();
+    const storeCount = await Store.count();
+    res.status(200).json({data:{ userCount, storeCount }});
+  } catch (error) {
     res.status(500).json({ msg: err.message });
   }
 };

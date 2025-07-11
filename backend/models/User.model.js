@@ -31,4 +31,29 @@ const User = sequelize.define("User", {
   },
 });
 
+export const createAdminIfNotExists = async () => {
+  try {
+    const existingAdmin = await User.findOne({ where: { role: "ADMIN" } });
+
+    if (!existingAdmin) {
+      const bcrypt = await import("bcrypt");
+      const hashedPassword = await bcrypt.hash("Admin@123", 10);
+
+      await User.create({
+        name: "Default System Administrator",
+        email: "admin@example.com",
+        address: "Admin Headquarters",
+        password: hashedPassword,
+        role: "ADMIN",
+      });
+
+      console.log("✅ Default admin user created.");
+    } else {
+      console.log("ℹ️ Admin user already exists.");
+    }
+  } catch (err) {
+    console.error("❌ Error creating admin user:", err);
+  }
+};
+
 export default User;

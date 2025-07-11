@@ -19,7 +19,7 @@ export const register = async (req, res) => {
       role: "USER",
     });
 
-    res.status(201).json({ msg: "User registered", user: newUser });
+    res.status(201).json({ msg: "User registered" });
   } catch (err) {
     res.status(500).json({ msg: err.message });
   }
@@ -42,8 +42,7 @@ export const login = async (req, res) => {
     );
 
     res.json({
-      token,
-      user: { id: user.id, name: user.name, role: user.role },
+      data: { token, user: { id: user.id, name: user.name, role: user.role } },
     });
   } catch (err) {
     res.status(500).json({ msg: err.message });

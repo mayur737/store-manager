@@ -4,8 +4,8 @@ import Rating from "../models/rating.model.js";
 export const createStore = async (req, res) => {
   try {
     const { name, email, address } = req.body;
-    const store = await Store.create({ name, email, address });
-    res.status(201).json(store);
+    await Store.create({ name, email, address });
+    res.status(201).json({ data: { msg: "Store created succesfully" } });
   } catch (err) {
     res.status(500).json({ msg: err.message });
   }
@@ -23,12 +23,12 @@ export const getAllStores = async (req, res) => {
 
         return {
           ...store.toJSON(),
-          averageRating: avg.toFixed(2),
+          avgRating: avg.toFixed(2),
         };
       })
     );
 
-    res.json(data);
+    res.status(200).json({ data: { stores: data } });
   } catch (err) {
     res.status(500).json({ msg: err.message });
   }
